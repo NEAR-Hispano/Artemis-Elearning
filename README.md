@@ -15,5 +15,7 @@ Por cada curso aprobado, los estudiante tendran la opcion de transformar su cert
 Queremos desarrollar una plataforma que integre VUE.js como Frontend y Backend con Rus, amigable y sencilla para los usuarios e incorporar la seguridad que proporciona el Blockchain para la generación de confianza en nuestro público cautivo.
 
 
+##Pantallas
+
 
 
