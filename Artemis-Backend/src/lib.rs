@@ -9,17 +9,17 @@
 //! [reset]: struct.Counter.html#method.reset
 
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, Balance};
+use near_sdk::{env, near_bindgen, AccountId, PanicOnDefault, Balance, Promise};
 use near_sdk::collections::{ UnorderedMap};
 //use near_sdk::json_types::{U128};
 use serde::Serialize;
 use serde::Deserialize;
-use std::collections::HashMap;
-use near_sdk::json_types::ValidAccountId;
+use near_sdk::json_types::{ValidAccountId, U128};
 //use near_sdk::env::is_valid_account_id;
 
-
 near_sdk::setup_alloc!();
+
+pub const VAULT_FEE: u128 = 500;
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
@@ -64,7 +64,7 @@ pub struct CoursesObject {
     img: String,
     content: Vec<TemplateObject>,
     price: Balance,
-    inscriptions: Option<Vec<AccountId>>,
+    inscriptions: Vec<AccountId>,
     reviews: Option<Vec<Review>>,
 }
 
@@ -88,7 +88,7 @@ pub struct CoursesInstructor {
     img: String,
     content: Vec<TemplateObject>,
     price: Balance,
-    inscriptions: Option<Vec<AccountId>>,
+    inscriptions: Vec<AccountId>,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
@@ -262,7 +262,7 @@ impl Contract {
         long_description: String,
         img: String,
         content: Vec<TemplateObject>,
-        price: Balance,
+        price: U128,
     ) -> CoursesObject {
         
         self.id_courses += 1;
@@ -275,8 +275,8 @@ impl Contract {
             long_description: long_description.to_string(),
             img: img.to_string(),
             content: content,
-            price: price,
-            inscriptions: None,
+            price: price.0,
+            inscriptions: Vec::new(),
             reviews: None,
         };
 
@@ -285,7 +285,7 @@ impl Contract {
         data
     }
 
-    pub fn get_cources_intructor(&self, user_id: Option<String>) -> Vec<CoursesObject> {
+    pub fn get_courses_intructor(&self, user_id: Option<String>) -> Vec<CoursesObject> {
         if user_id.is_some() {
             self.courses.iter().filter(|(_k, x)| x.creator_id == user_id.clone().unwrap().to_string()).map(|(_k, x)| CoursesObject {
                 id: x.id,
@@ -305,8 +305,8 @@ impl Contract {
         }
     }
 
-    pub fn get_market_cources(&self,
-        cource_id: Option<i128>,
+    pub fn get_market_courses(&self,
+        course_id: Option<i128>,
         creator_id: Option<AccountId>,
         category_id: Option<i128>,
         from_index: Option<u128>,
@@ -330,9 +330,9 @@ impl Contract {
             result = result.iter().filter(|x| x.categories.id == category).map(|x| x.clone()).collect();
         };
 
-        if cource_id.is_some() {
-            let cource = cource_id.unwrap().clone();
-            result = result.iter().filter(|x| x.id == cource).map(|x| x.clone()).collect();
+        if course_id.is_some() {
+            let course = course_id.unwrap().clone();
+            result = result.iter().filter(|x| x.id == course).map(|x| x.clone()).collect();
         };
 
         result.iter()
@@ -350,7 +350,7 @@ impl Contract {
         }).collect()
     }
 
-    pub fn get_recent_cources(&self,
+    pub fn get_recent_courses(&self,
         number_courses: u64,
     ) -> Vec<MarketView> {
 
@@ -383,6 +383,88 @@ impl Contract {
             }).collect()
         }
         
+    }
+
+    pub fn delete_course(&mut self, course_id: i128) {
+        let course = self.courses.get(&course_id).expect("Course does not exist");
+
+        if course.creator_id == env::signer_account_id().to_string() {
+            if course.inscriptions.len() == 0 {
+                self.courses.remove(&course_id);
+                env::log(b"Course deleted")
+            } else {
+                env::panic(b"Can't delete course")
+            }
+        } else {
+            env::panic(b"No permission")
+        }
+    }
+
+    pub fn get_course_size(&self,
+        creator_id: Option<AccountId>,
+        category_id: Option<i128>,) -> u64 {
+        let mut result: Vec<CoursesObject> = self.courses.iter().map(|(_k, v)| v).collect::<Vec<CoursesObject>>();
+
+        if creator_id.is_some() {
+            let creator = creator_id.unwrap().clone();
+            result = result.iter().filter(|x| x.creator_id == creator).map(|x| x.clone()).collect();
+        };
+
+        if category_id.is_some() {
+            let category = category_id.unwrap().clone();
+            result = result.iter().filter(|x| x.categories.id == category).map(|x| x.clone()).collect();
+        };
+
+        result.len().try_into().unwrap()
+    }
+
+    #[payable]
+    pub fn course_buy(
+        &mut self, 
+        course_id: i128, 
+    ) -> CoursesObject {
+        let initial_storage_usage = env::storage_usage();
+
+        let mut course = self.courses.get(&course_id).expect("Artemis: Course does not exist");
+        let price: Balance = course.price;
+        let attached_deposit = env::attached_deposit();
+        assert!(
+            attached_deposit >= price,
+            "Artemis: attached deposit is less than price : {}",
+            price
+        );
+
+        let for_vault = price as u128 * VAULT_FEE / 10_000u128;
+        let price_deducted = price - for_vault;
+        Promise::new(course.creator_id.to_string()).transfer(price_deducted);
+
+        if for_vault != 0 {
+            Promise::new(self.vault_id.clone()).transfer(for_vault);
+        }
+
+        refund_deposit(env::storage_usage() - initial_storage_usage, price);
+
+        course.inscriptions.push(env::signer_account_id().to_string());
+        self.courses.insert(&course_id, &course);
+
+        course
+    }
+
+}
+
+fn refund_deposit(storage_used: u64, extra_spend: Balance) {
+    let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
+    let attached_deposit = env::attached_deposit() - extra_spend;
+
+    assert!(
+        required_cost <= attached_deposit,
+        "Must attach {} yoctoNEAR to cover storage",
+        required_cost,
+    );
+
+    let refund = attached_deposit - required_cost;
+    if refund > 1 {
+        Promise::new(env::predecessor_account_id()).transfer(refund);
     }
 }
 

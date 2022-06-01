@@ -85,7 +85,7 @@
                       <v-card color="var(clr-card)" class="cartas divcol align">
                         <img :src="sliderReciente[+index + i].img" alt="Imagen curso">
                         <div class="divcol astart">
-                          <a :href="sliderReciente[+index + i].to" class="h7-em bold"
+                          <a :href="'#/curso/' + sliderReciente[+index + i].id" class="h7-em bold"
                             style="color: #FF6B3B !important">
                             {{sliderReciente[+index + i].title }}
                           </a>
@@ -97,7 +97,7 @@
                             hover
                           ></v-rating>
                           <div class="h6-em bold">
-                            {{sliderReciente[+index + i].price }}Ⓝ
+                            {{formatPrice(sliderReciente[+index + i].price)}}Ⓝ
                           </div>
                         </div>
                       </v-card>
@@ -115,7 +115,7 @@
 
 <script>
 import * as nearAPI from 'near-api-js'
-const { connect, keyStores, WalletConnection, Contract } = nearAPI
+const { connect, keyStores, WalletConnection, Contract, utils } = nearAPI
 
 const keyStore = new keyStores.BrowserLocalStorageKeyStore()
 const config = {
@@ -281,34 +281,37 @@ export default {
     },
   },
   mounted () {
-    this.getRecentCources()
+    this.getRecentCourses()
   },
   methods: {
+    formatPrice (price) {
+      return utils.format.formatNearAmount(price.toLocaleString('fullwide', { useGrouping: false }))
+    },
     SelectCardDestacado(item) {
       console.log(item)
     },
-    async getRecentCources() {
+    async getRecentCourses() {
       const CONTRACT_NAME = 'contract.e-learning.testnet'
       // connect to NEAR
       const near = await connect(config)
       // create wallet connection
       const wallet = new WalletConnection(near)
       const contract = new Contract(wallet.account(), CONTRACT_NAME, {
-        viewMethods: ['get_recent_cources'],
+        viewMethods: ['get_recent_courses'],
         sender: wallet.account()
       })
-      await contract.get_recent_cources({
+      await contract.get_recent_courses({
         number_courses: 12,
       })
         .then((response) => {
           for (var i = 0; i < response.length; i++) {
             var item = {}
             item.title = response[i].title
+            item.id = response[i].id
             item.price = response[i].price
             item.img = response[i].img
             item.desc = response[i].short_description
             item.rating = 0
-            item.to = "#"
             this.sliderReciente.push(item)
           }
           this.sliderReciente = this.sliderReciente.reverse()

@@ -3,6 +3,7 @@
 // layout
 #layout {
   background: var(--bg);
+  .primary--text {color: $clr-btn !important}
   .v-main__wrap {
     // padding: 4rem $content-padding 70px $content-padding;
     padding-inline: 2em;

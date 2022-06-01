@@ -33,6 +33,16 @@ export default new Router({
           component: () => import('@/pages/Profile/Profile'),
         },
         {
+          path: '/cursos',
+          name: 'Cursos',
+          component: () => import('@/pages/Cursos/Cursos'),
+        },
+        {
+          path: '/curso/:id?',
+          name: 'DetalleCurso',
+          component: () => import('@/pages/Cursos/DetalleCurso'),
+        },
+        {
           path: '/instructor',
           name: 'Instructor',
           component: () => import('@/pages/Instructor/Instructor'),
@@ -46,6 +56,16 @@ export default new Router({
           path: '/instructor-editar-curso/:id?',
           name: 'InstructorCursosEdited',
           component: () => import('@/pages/InstructorCursos/InstructorCursosEdited'),
+        },
+        {
+          path: '/aprendizaje',
+          name: 'Aprendizaje',
+          component: () => import('@/pages/Aprendizaje/Aprendizaje'),
+        },
+        {
+          path: '/ver-curso/:id?',
+          name: 'VerCurso',
+          component: () => import('@/pages/Aprendizaje/VerCurso/VerCurso'),
         },
       ],
     },

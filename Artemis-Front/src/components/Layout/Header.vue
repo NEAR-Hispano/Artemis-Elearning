@@ -26,7 +26,7 @@
         <v-col class="jend padd eliminarmobile">
           <!-- content -->
           <v-col class="contmiddle end padd">
-            <a :href="item.link" v-for="(item, index) in dataHeader" :key="index"
+            <a v-for="(item, index) in dataHeader" :key="index" @click="$router.push(item.link)"
               class="h9-em openMenuCollections notdefault-hover">
               {{ item.title }}
             </a>
@@ -140,7 +140,7 @@ export default {
         },
         {
           title: "Cursos",
-          link: "#"
+          link: "#/cursos"
         },
         // {
         //   title: "Mi Perfil",
@@ -172,11 +172,11 @@ export default {
         this.dataHeader = [
           {
             title: "Inicio",
-            link: "#/"
+            link: "/"
           },
           {
             title: "Cursos",
-            link: "#"
+            link: "/cursos"
           },
           // {
           //   title: "Mi Perfil",
@@ -185,11 +185,11 @@ export default {
           
           {
             title: "Instructor",
-            link: "#/instructor"
+            link: "/instructor"
           },
           {
             title: "Mi Aprendizaje",
-            link: "#"
+            link: "/aprendizaje"
           }
       ]
       }
@@ -206,7 +206,7 @@ export default {
         },
         {
           title: "Cursos",
-          link: "#"
+          link: "#/cursos"
         },
         // {
         //   title: "Mi Perfil",

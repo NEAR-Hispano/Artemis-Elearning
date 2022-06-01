@@ -42,6 +42,13 @@ h3:not(.notdefault-typography) {
   font-weight: 600 !important;
 }
 
+
+/* color */
+*{
+  caret-color: $clr-btn;
+}
+
+
 /* other adjust */
 
 .v-chip {

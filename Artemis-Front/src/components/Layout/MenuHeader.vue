@@ -91,7 +91,7 @@ export default {
         },
         {
           title: "Cursos",
-          to: "#",
+          to: "#/cursos",
         },
         // {
         //   title: "Mi Perfil",
@@ -99,7 +99,7 @@ export default {
         // },
         {
           title: "Instructor",
-          to: "#",
+          to: "#/instructor",
         },
         {
           title: "Mi Aprendizaje",

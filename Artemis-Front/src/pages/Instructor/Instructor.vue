@@ -25,7 +25,7 @@
           <v-btn 
             class="botones h9-em" 
             rounded
-            @click="newCource()"
+            @click="newCourse()"
           >
           NUEVO CURSO
           </v-btn>
@@ -70,9 +70,9 @@
 
           <span class="h8-em tcenter">Valoración del curso</span>
 
-          <div class="spacee fill-Ⓝw">
+          <div class="spacee fill-w">
             <v-btn class="botones h9-em" rounded :to="'/instructor-editar-curso/' + item.id">EDITAR</v-btn>
-            <v-btn class="botones h9-em" rounded @click="showDialog(item.id)">ELIMINAR</v-btn>
+            <v-btn class="botones h9-em" rounded @click="showDialog()">ELIMINAR</v-btn>
           </div>
           <v-dialog v-model="dialog" max-width="max-content">
                         <v-card>
@@ -82,7 +82,7 @@
                             <v-btn color="red" rounded text @click="cerrarDialogo">
                               <span style="color: red !important">Cancelar</span>
                             </v-btn>
-                            <v-btn color="#F29627" rounded text @click="DeleteCource()">
+                            <v-btn color="#F29627" rounded :disabled="disabled_delete" text @click="DeleteCourse(item)">
                               <span style="color: #F29627 !important">Eliminar</span>
                             </v-btn>
                             <v-spacer></v-spacer>
@@ -97,7 +97,7 @@
 
 <script>
 import * as nearAPI from 'near-api-js'
-const { connect, keyStores, WalletConnection, Contract } = nearAPI
+const { connect, keyStores, WalletConnection, Contract, utils } = nearAPI
 
 const keyStore = new keyStores.BrowserLocalStorageKeyStore()
 const config = {
@@ -115,43 +115,47 @@ export default {
       dataCursos: [],
       snackbar: {},
       dialog: false,
-      item_id: null,
+      item_id: {},
+      disabled_delete: false,
     }
   },
   mounted () {
-    this.getCourcesInstructor()
+    this.getCoursesInstructor()
   },
   methods: {
-    showDialog (item) {
-      this.item_id = item
-        this.dialog = !this.dialog
-      },
-    async getCourcesInstructor() {
+    showDialog () {
+      this.dialog = !this.dialog
+    },
+    formatPrice (price) {
+      return utils.format.formatNearAmount(price.toLocaleString('fullwide', { useGrouping: false }))
+    },
+    async getCoursesInstructor() {
+      this.dataCursos = []
       const CONTRACT_NAME = 'contract.e-learning.testnet'
       // connect to NEAR
       const near = await connect(config)
       // create wallet connection
       const wallet = new WalletConnection(near)
       const contract = new Contract(wallet.account(), CONTRACT_NAME, {
-        viewMethods: ['get_cources_intructor'],
+        viewMethods: ['get_courses_intructor'],
         sender: wallet.account()
       })
-      await contract.get_cources_intructor({
+      await contract.get_courses_intructor({
         user_id: wallet.getAccountId(),
       })
-        .then((response) => {
+        .then(async (response) => {
           for (var i = 0; i < response.length; i++) {
             var item = {}
             item.id = response[i].id
             item.title = response[i].title
-            item.price = response[i].price
+            item.price = this.formatPrice(response[i].price)
             item.img = response[i].img
-            if (response[i].inscriptions === null) {
+            if (response[i].inscriptions.length === 0) {
               item.profits = 0
               item.inscriptions = 0
             } else {
               item.inscriptions = response[i].inscriptions.length
-              item.profits = response[i].inscriptions.length * response[i].price
+              item.profits = ((response[i].inscriptions.length * this.formatPrice(response[i].price)) * 0.95).toFixed(2)
             }
             if (response[i].reviews === null) {
               item.rating = 0
@@ -161,7 +165,7 @@ export default {
           this.dataCursos = this.dataCursos.reverse()
         })
     },
-    async newCource () {
+    async newCourse () {
       const response = await this.getData()
 
       if (response === true) {
@@ -201,8 +205,66 @@ export default {
         return response
       }
     },
-    DeleteCource() {
-      console.log(this.item_id)
+    async DeleteCourse(item) {
+      this.disabled_delete = true
+      const CONTRACT_NAME = 'contract.e-learning.testnet'
+        
+      const near = await connect(config)
+        // create wallet connection
+      const wallet = new WalletConnection(near)
+
+      if (item.inscriptions === 0) {
+        const contract = new Contract(wallet.account(), CONTRACT_NAME, {
+          changeMethods: ['delete_course'],
+          sender: wallet.account()
+        })
+        contract.delete_course({
+              course_id: item.id
+            }).then((response) => {
+              console.log(response)
+              this.snackbar = {
+                color: "green",
+                icon: "check_circle",
+                mode: "multi-line",
+                position: "top",
+                timeout: 1500,
+                title: "Éxito!",
+                text: "El curso ha sido eliminado",
+                visible: true
+              }
+              this.getCoursesInstructor()
+              this.cerrarDialogo
+              this.disabled_delete = false
+            })
+          .catch((error) => {
+            console.log(error)
+            this.snackbar = {
+              color: "red",
+              icon: "error",
+              mode: "multi-line",
+              position: "top",
+              timeout: 1500,
+              title: "Error!",
+              text: "Ha ocurrido un error",
+              visible: true
+            }
+            this.cerrarDialogo
+            this.disabled_delete = false
+          })
+      } else {
+        this.snackbar = {
+              color: "red",
+              icon: "error",
+              mode: "multi-line",
+              position: "top",
+              timeout: 1500,
+              title: "Error!",
+              text: "No se puede eliminar el curso",
+              visible: true
+            }
+        this.cerrarDialogo
+        this.disabled_delete = false
+      }
     },
     cerrarDialogo: function () {
         this.dialog = !this.dialog
