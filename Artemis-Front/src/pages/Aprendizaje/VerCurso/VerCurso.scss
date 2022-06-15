@@ -3,16 +3,24 @@
 // verCurso
 #verCurso {
   font-size: 16px;
+  @media (max-width: 600px) and (max-height: 1880px) {font-size: 14px !important}
+  @media (max-width: 400px) and (max-height: 1880px) {font-size: 12px !important}
+
   // stepper config
-  .v-stepper__step__step {
-    i {color: $clr-text-btn !important}
-    &.primary {background-color: $clr-btn !important}
-  }
-  .v-stepper__step--complete {
-    .v-stepper__step__step {display: none !important}
-    &.v-stepper__step--active {
-      .v-stepper__label {color: $clr-btn !important}
-    }
+  // .v-stepper__step__step {
+  //   i {color: $clr-text-btn !important}
+  //   &.primary {background-color: $clr-btn !important}
+  // }
+  // .v-stepper__step--complete {
+  //   .v-stepper__step__step {display: none !important}
+  //   &.v-stepper__step--active {
+  //     .v-stepper__label {color: $clr-btn !important}
+  //   }
+  // }
+
+  // tabs config
+  .v-tabs {
+    @media (max-width: 880px) and (max-height: 1880px) {flex-direction: column}
   }
   // content config
   h4:not(.titulo) {
@@ -39,9 +47,8 @@
   .sectionTop {
     --border: 15px;
     width: 99%;
-    height: 33.14em;
+    height: max-content;
     background-color: #FFFFFF;
-    box-shadow: 0px 0px 5px rgb(0, 0, 0, 0.5) !important;
     border-radius: var(--border);
     margin: auto;
     margin-block: 5px calc(16px * 2);
@@ -50,8 +57,9 @@
       box-sizing: border-box;
       margin: var(--size);
       border-radius: var(--border);
+      box-shadow: 0px 0px 5px rgb(0, 0, 0, 0.5) !important;
       width: calc(100% - (var(--size) * 2)) !important;
-      height: calc(100% - (var(--size) * 2)) !important;
+      height: calc(100% - (var(--size) * 2));
     }
     #VueDocPreviewRoot {
       --size: 0em;

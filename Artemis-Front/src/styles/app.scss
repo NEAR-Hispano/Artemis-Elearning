@@ -51,6 +51,10 @@ h3:not(.notdefault-typography) {
 
 /* other adjust */
 
+.activeClass {
+  i, span {color: $clr-btn !important}
+}
+
 .v-chip {
   background-color: $clr-btn !important;
   .v-chip__content {
