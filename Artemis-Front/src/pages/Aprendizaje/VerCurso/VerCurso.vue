@@ -14,11 +14,11 @@
     <!-- ////////////////////////////////// -->
 
       <v-tab-item v-for="(item,i) in dataStepper" :key="i">
-        <section class="sectionTop" v-if="item.type == 'article'">
+        <section class="sectionTop" v-if="item.type == 2">
           <VueDocPreview style="height: 33.14em !important" :value="item.docPreview.value" :type="item.docPreview.type" />
         </section>
 
-        <section class="sectionTop" v-if="item.type == 'video'">
+        <section class="sectionTop" v-if="item.type == 1">
           <video :src="item.course.video" controls />
         </section>
 
@@ -126,6 +126,18 @@
 </template>
 
 <script>
+import * as nearAPI from 'near-api-js'
+const { connect, keyStores, WalletConnection, Contract } = nearAPI
+
+const keyStore = new keyStores.BrowserLocalStorageKeyStore()
+const config = {
+        networkId: "testnet",
+        keyStore, 
+        nodeUrl: "https://rpc.testnet.near.org",
+        walletUrl: "https://wallet.testnet.near.org",
+        helperUrl: "https://helper.testnet.near.org",
+        explorerUrl: "https://explorer.testnet.near.org",
+};
 import VueDocPreview from 'vue-doc-preview'
 
 export default {
@@ -133,31 +145,10 @@ export default {
   components: { VueDocPreview },
   data() {
     return {
+      course_id: this.$route.params.id,
       tabs: 0,
-      title: "Blockchain y NEAR Protocol: Fundamentos Esenciales",
-      dataStepper: [
-        {
-          listTitle: "INTRODUCCIÓN",
-          type: "article",
-          docPreview: {
-            value: "https://www.sample-videos.com/doc/Sample-doc-file-100kb.doc",
-            type: "office",
-          },
-          course: {
-            desc: "Aprende los principales elementos de blockchain (cadena de bloques) y NEAR Protocol en este curso en video.",
-            aprendizaje: "Tendrás un claro entendimiento de lo que es la tecnología blockchain, también conocida como cadena de bloques, y cómo funciona. <br>Entenderás lo que es Bitcoin y cómo puedes empezar a usar Bitcoin. <br>Conocerás , entenderás y podrás hablar con confianza acerca de los principales términos y conceptos relacionados a blockchain y Bitcoin."
-          },
-        },
-        {
-          listTitle: "PRESENTAND EL PROYECTO",
-          type: "video",
-          course: {
-            video: require("@/assets/videos/test.mp4"),
-            desc: "Aprende los principales elementos de blockchain (cadena de bloques) y NEAR Protocol en este curso en video.",
-            aprendizaje: "Tendrás un claro entendimiento de lo que es la tecnología blockchain, también conocida como cadena de bloques, y cómo funciona. <br>Entenderás lo que es Bitcoin y cómo puedes empezar a usar Bitcoin. <br>Conocerás , entenderás y podrás hablar con confianza acerca de los principales términos y conceptos relacionados a blockchain y Bitcoin.",
-          },
-        },
-      ],
+      title: '',
+      dataStepper: [],
       PresentacionExamen: 1,
       dataPresentacionExamen: [
         {
@@ -186,8 +177,61 @@ export default {
     }
   },
   mounted () {
+    this.getCourse()
   },
   methods: {
+    async getCourse() {
+      const CONTRACT_NAME = 'contract.e-learning.testnet'
+      // connect to NEAR
+      const near = await connect(config)
+      // create wallet connection
+      const wallet = new WalletConnection(near)
+      const contract = new Contract(wallet.account(), CONTRACT_NAME, {
+        viewMethods: ['get_course_id'],
+        sender: wallet.account()
+      })
+      await contract.get_course_id({
+        user_id: wallet.getAccountId(),
+        course_id: parseInt(this.course_id),
+      })
+        .then((response) => {
+          console.log(response)
+          this.title = response.title
+
+          for (var i = 0; i < response.content.length; i++) {
+            let item = {}
+            if (response.content[i].tipo === 2) {
+              item = {
+                listTitle: response.content[i].title,
+                type: response.content[i].tipo,
+                docPreview: {
+                  value: response.content[i].content,
+                  type: "code"
+                },
+                course: {
+                  desc: response.short_description,
+                  aprendizaje: response.long_description
+                }
+              }
+            } else if (response.content[i].tipo === 1) {
+              item = {
+                listTitle: response.content[i].title,
+                type: response.content[i].tipo,
+                course: {
+                  video: response.content[i].content,
+                  desc: response.short_description,
+                  aprendizaje: response.long_description
+                }
+              }
+            }
+
+            this.dataStepper.push(item)
+          }
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
   }
 };
 </script>

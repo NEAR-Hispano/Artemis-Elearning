@@ -166,7 +166,7 @@ export default {
               position: "top",
               timeout: 1500,
               title: "Error!",
-              text: "Ha ocurrido un error",
+              text: error,//"Ha ocurrido un error",
               visible: true
             }
           })

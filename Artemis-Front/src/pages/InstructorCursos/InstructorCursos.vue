@@ -1634,7 +1634,7 @@ export default {
       this.axios
         .post("http://localhost:3070/api/ipfs/files/", formData)
         .then((response) => {
-          console.log(response);
+          console.log("ipfs",response);
           for (var i = 0; i < response.data.length; i++) {
             if (response.data.length === i + 1) {
               imgFinal =
@@ -1663,7 +1663,8 @@ export default {
               content: content,
               price: utils.format.parseNearAmount(this.publicar_precio),
             })
-            .then(() => {
+            .then((response) => {
+              console.log("response", response)
               this.snackbar = {
                 color: "green",
                 icon: "check_circle",
@@ -1691,7 +1692,7 @@ export default {
               this.$router.push({ path: "/instructor" });
             })
             .catch((error) => {
-              console.log(error);
+              console.log("error", error);
               this.snackbar = {
                 color: "red",
                 icon: "error",
@@ -1699,7 +1700,7 @@ export default {
                 position: "top",
                 timeout: 1500,
                 title: "Error!",
-                text: "Ha ocurrido algo",
+                text: error + "Ha ocurrido algo",
                 visible: true,
               };
               this.progress = false;
