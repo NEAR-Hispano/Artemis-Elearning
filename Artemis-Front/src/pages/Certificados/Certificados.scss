@@ -1,0 +1,25 @@
+@import "@/styles/app";
+
+// certificados
+#certificados {
+  font-size: 16px;
+  #datatable {
+    margin-bottom: 2em;
+    .v-chip__content {color: #FFFFFF !important; font-size: .6em !important}
+    th {
+      span {
+        color: $clr-btn !important;
+        font-size: var(--step-em-0) !important;
+      }
+    }
+    tbody {
+      td {
+        padding-block: 1em;
+        &:not(.v-data-table__mobile-row) {border-bottom:none}
+      }
+      .v-data-table__mobile-row {
+        &__cell:last-of-type {margin-inline: auto}
+      }
+    }
+  }
+}
