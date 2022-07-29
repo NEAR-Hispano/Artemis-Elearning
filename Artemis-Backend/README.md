@@ -1,2 +1,0 @@
-# Artemis - Backend
-Artemis - Backend

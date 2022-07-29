@@ -12,7 +12,7 @@ Por cada curso aprobado, los estudiante tendran la opcion de transformar su cert
 
 ## Desarrollo  
 
-Queremos desarrollar una plataforma que integre VUE.js como Frontend y Backend con Rus, amigable y sencilla para los usuarios e incorporar la seguridad que proporciona el Blockchain para la generación de confianza en nuestro público cautivo.
+Plataforma que integra VUE.js como Frontend y Backend con Rust, es una dapp amigable y sencilla para los usuarios, que permite incorporar la seguridad que proporciona el Blockchain para la generación de confianza del publico.
 
 
 # Autores
@@ -20,6 +20,9 @@ Queremos desarrollar una plataforma que integre VUE.js como Frontend y Backend c
 - Jorge Luis Cuauro
 - Juan Jose Ochando
 
+# Ambiente de Pruebas
+
+> https://www.artemis-edu.com/#/
 
 
 
